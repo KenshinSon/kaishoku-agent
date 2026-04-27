@@ -13,7 +13,7 @@ export default async function BookingsPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const serialized = bookings.map((b) => ({
+  const serialized = bookings.map((b: (typeof bookings)[number]) => ({
     id: b.id,
     status: b.status,
     preferredDate: b.preferredDate ? b.preferredDate.toISOString() : null,
