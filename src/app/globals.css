@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+:root {
+  --brand-yellow: #FFED00;
+  --brand-navy: #1A1E3C;
+  --brand-yellow-light: #FFFBE0;
+}
+
+body {
+  background: #FFFFFF;
+  color: #1A1E3C;
+  font-family: -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

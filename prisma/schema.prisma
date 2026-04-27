@@ -1,0 +1,474 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  emailVerified  DateTime?
+  name           String?
+  image          String?
+  avatarUrl      String?
+  googleId       String?   @unique
+  mobile                 String?
+  ownerDepartureLocation String?
+  bio                    String?
+  organizationId         String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  organization    Organization?    @relation(fields: [organizationId], references: [id])
+  diningRequests  DiningRequest[]
+  recommendations Recommendation[]
+  events          Event[]
+  feedbacks       Feedback[]
+  accounts        Account[]
+  sessions        Session[]
+  favorites        Favorite[]
+  chatSessions     ChatSession[]
+  isPublicProfile  Boolean          @default(false)
+  dmEnabled        Boolean          @default(false)
+  publicReviews    PublicReview[]
+  dmConversations1 DMConversation[] @relation("DMUser1")
+  dmConversations2 DMConversation[] @relation("DMUser2")
+  dmMessagesSent   DMMessage[]
+  userPoint        UserPoint?
+  pointHistory     PointHistory[]
+  badges           UserBadge[]
+  reviewHelpful    ReviewHelpful[]
+  bookingRequests  BookingRequest[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+model Organization {
+  id             String   @id @default(cuid())
+  name           String
+  address        String?
+  industry       String?
+  nearestStation String?
+  websiteUrl     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  users    User[]
+  contacts Contact[]
+}
+
+model Contact {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  title          String?
+  companyName    String?
+  gender         String?
+  ageRange       String?
+  smokerType     String?
+  preferences    Json?
+  linkedinUrl    String?
+  instagramUrl   String?
+  xUrl           String?
+  tiktokUrl      String?
+  snsNote        String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  diningRequests DiningRequest[]
+}
+
+model DiningRequest {
+  id             String   @id @default(cuid())
+  userId         String
+  contactId      String?
+  templateName   String?
+  scheduledAt    DateTime?
+  timeFlexible   Boolean  @default(false)
+  durationMinutes Int?
+  totalGuests    Int?
+  clientGuests   Int?
+  ownGuests      Int?
+  purpose        String?
+  relationshipNote String?
+  cuisinePrefs   String[]
+  drinkPrefs     String[]
+  foodLikes      String?
+  foodDislikes   String?
+  foodAbsoluteNg String?
+  drinkMain      String?
+  drinkCountEst  String?
+  drinkNonAlcOk  Boolean?
+  budgetPerPerson Int?
+  budgetDrinkIncluded Boolean @default(false)
+  budgetTotal    Int?
+  paymentStyle   String?
+  atmosphereNote String?
+  privateRoom    String?
+  seatPrefs      String?
+  toneNote       String?
+  photoPolicy    String?
+  ngConditions   String[]
+  guestDepartureLocation  String?
+  guestReturnStation      String?
+  ownerDepartureLocation  String?
+  smokingPolicy           String?
+  transportMode           String?
+  gatheringTimeWindow     String?
+  locationPriority        String?
+  rainConsideration       Boolean  @default(false)
+  dissolveRoute           String?
+  preferredArea           String?
+  source         String?       @default("form")
+  status         RequestStatus @default(DRAFT)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user            User             @relation(fields: [userId], references: [id])
+  contact         Contact?         @relation(fields: [contactId], references: [id])
+  recommendations Recommendation[]
+  events          Event[]
+  feedbacks       Feedback[]
+}
+
+enum RequestStatus {
+  DRAFT
+  SEARCHING
+  PROPOSED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  TEMPLATE
+}
+
+model Venue {
+  id          String   @id @default(cuid())
+  name        String
+  nameKana    String?
+  address     String?
+  latitude    Float?
+  longitude   Float?
+  nearestStation String?
+  walkMinutes  Int?
+  cuisineType String?
+  priceRange  String?
+  priceMin    Int?
+  priceMax    Int?
+  isChain          Boolean  @default(false)
+  smokingPolicy    String?
+  hasPrivateRoom   Boolean?
+  seatingType      String?
+  seatingNote      String?
+  rating           Float?
+  priceLevel       Int?
+  websiteUri       String?
+  tabelogUrl       String?
+  googleMapsUrl    String?
+  googlePlaceId    String?  @unique
+  canonicalizedAt  DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  averageRating   Float?
+  sources         VenueSource[]
+  signals         VenueSignal[]
+  recommendations RecommendationVenue[]
+  favorites       Favorite[]
+  feedbacks       Feedback[]
+  publicReviews   PublicReview[]
+  bookingRequests BookingRequest[]
+}
+
+model VenueSource {
+  id            String   @id @default(cuid())
+  venueId       String
+  source        String
+  externalId    String?
+  sourceUrl     String?
+  fetchedAt     DateTime
+  methodVersion String
+  rawSnapshot   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  venue Venue @relation(fields: [venueId], references: [id])
+  @@unique([venueId, source])
+}
+
+model VenueSignal {
+  id      String @id @default(cuid())
+  venueId String
+  source  String
+  scoreQuietness    Float?
+  scoreService      Float?
+  scoreSeating      Float?
+  scoreDrinkware    Float?
+  scoreSmoking      Float?
+  scoreBudgetFit    Float?
+  scorePurposeFit   Float?
+  scoreTotal        Float?
+  googleRating      Float?
+  googleReviewCount Int?
+  tabelogScore      Float?
+  tabelogReviewCount Int?
+  ownSummary        String?
+  flags             String[]
+  computedAt DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  venue Venue @relation(fields: [venueId], references: [id])
+  @@unique([venueId, source])
+}
+
+model Recommendation {
+  id              String @id @default(cuid())
+  diningRequestId String
+  userId          String
+  status          RecommendationStatus @default(ACTIVE)
+  aiModel         String?
+  aiPromptVersion String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  diningRequest DiningRequest         @relation(fields: [diningRequestId], references: [id])
+  user          User                  @relation(fields: [userId], references: [id])
+  venues        RecommendationVenue[]
+  feedbacks     Feedback[]
+}
+
+enum RecommendationStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+model RecommendationVenue {
+  id               String @id @default(cuid())
+  recommendationId String
+  venueId          String
+  rank             Int
+  reason           String
+  cautionNote      String?
+  isBackup         Boolean @default(false)
+  isSelected       Boolean @default(false)
+  createdAt DateTime @default(now())
+  recommendation Recommendation @relation(fields: [recommendationId], references: [id])
+  venue          Venue           @relation(fields: [venueId], references: [id])
+}
+
+model Event {
+  id              String   @id @default(cuid())
+  userId          String
+  diningRequestId String?
+  eventType       EventType
+  properties      Json?
+  occurredAt      DateTime @default(now())
+  user          User           @relation(fields: [userId], references: [id])
+  diningRequest DiningRequest? @relation(fields: [diningRequestId], references: [id])
+}
+
+enum EventType {
+  REQUEST_CREATED
+  RECOMMENDATION_VIEWED
+  VENUE_CLICKED
+  TEMPLATE_COPIED
+  VENUE_SELECTED
+  BOOKING_CONFIRMED
+  FEEDBACK_SUBMITTED
+}
+
+model Feedback {
+  id               String   @id @default(cuid())
+  userId           String
+  recommendationId String?
+  venueId          String?
+  diningRequestId  String?
+  rating           Int?
+  comment          String?
+  ratingService    Int?
+  ratingSeating    Int?
+  ratingFood       Int?
+  ratingDrink      Int?
+  ratingCostPerf   Int?
+  ratingQuietness  Int?
+  businessResult   String?
+  wouldRevisit     Boolean?
+  reused           Boolean?
+  decisionMinutes  Int?
+  privateNote      String?
+  createdAt        DateTime @default(now())
+  user           User            @relation(fields: [userId], references: [id])
+  recommendation Recommendation? @relation(fields: [recommendationId], references: [id])
+  venue          Venue?          @relation(fields: [venueId], references: [id])
+  diningRequest  DiningRequest?  @relation(fields: [diningRequestId], references: [id])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  venueId   String
+  memo      String?
+  createdAt DateTime @default(now())
+  user  User  @relation(fields: [userId], references: [id])
+  venue Venue @relation(fields: [venueId], references: [id])
+  @@unique([userId, venueId])
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User         @relation(fields: [userId], references: [id])
+  messages  ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  role      String
+  content   String   @db.Text
+  metadata  Json?
+  createdAt DateTime @default(now())
+  session   ChatSession @relation(fields: [sessionId], references: [id])
+}
+
+model PublicReview {
+  id              String   @id @default(cuid())
+  userId          String
+  venueId         String
+  rating          Int
+  ratingService   Int?
+  ratingSeating   Int?
+  ratingFood      Int?
+  ratingDrink     Int?
+  ratingCostPerf  Int?
+  ratingQuietness Int?
+  comment         String
+  businessScene   String?
+  wouldRevisit    Boolean?
+  helpfulCount    Int      @default(0)
+  isPublic        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User           @relation(fields: [userId], references: [id])
+  venue           Venue          @relation(fields: [venueId], references: [id])
+  helpfulVotes    ReviewHelpful[]
+}
+
+model ReviewHelpful {
+  id        String   @id @default(cuid())
+  reviewId  String
+  userId    String
+  createdAt DateTime @default(now())
+  review    PublicReview @relation(fields: [reviewId], references: [id])
+  user      User         @relation(fields: [userId], references: [id])
+  @@unique([reviewId, userId])
+}
+
+model DMConversation {
+  id        String   @id @default(cuid())
+  user1Id   String
+  user2Id   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user1     User       @relation("DMUser1", fields: [user1Id], references: [id])
+  user2     User       @relation("DMUser2", fields: [user2Id], references: [id])
+  messages  DMMessage[]
+  @@unique([user1Id, user2Id])
+}
+
+model DMMessage {
+  id             String    @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+  conversation   DMConversation @relation(fields: [conversationId], references: [id])
+  sender         User           @relation(fields: [senderId], references: [id])
+}
+
+model UserPoint {
+  id          String   @id @default(cuid())
+  userId      String
+  points      Int      @default(0)
+  totalEarned Int      @default(0)
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+  @@unique([userId])
+}
+
+model PointHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  points    Int
+  reason    String
+  relatedId String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeType String
+  awardedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  @@unique([userId, badgeType])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model BookingRequest {
+  id                    String        @id @default(cuid())
+  userId                String
+  venueId               String
+  diningRequestId       String?
+  recommendationVenueId String?
+  status                BookingStatus @default(PENDING)
+  preferredDate         DateTime?
+  guestCount            Int?
+  specialRequests       String?
+  planType              String        @default("free")
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  user                  User          @relation(fields: [userId], references: [id])
+  venue                 Venue         @relation(fields: [venueId], references: [id])
+}
