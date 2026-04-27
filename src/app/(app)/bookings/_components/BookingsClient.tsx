@@ -10,7 +10,7 @@ type Booking = {
   guestCount: number | null;
   specialRequests: string | null;
   createdAt: string;
-  venue: { id: string; name: string; address: string | null };
+  venue: { id: string; name: string; address: string | null } | null;
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -115,8 +115,8 @@ export default function BookingsClient({ initialBookings }: { initialBookings: B
               <div key={b.id} className="bg-white border-2 border-[#1A1E3C] rounded-2xl px-5 py-4 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0 space-y-1">
-                    <p className="font-black text-[#1A1E3C] text-base truncate">{b.venue.name}</p>
-                    {b.venue.address && (
+                    <p className="font-black text-[#1A1E3C] text-base truncate">{b.venue?.name ?? "—"}</p>
+                    {b.venue?.address && (
                       <p className="text-xs text-gray-400 truncate">{b.venue.address}</p>
                     )}
                     <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
@@ -180,7 +180,7 @@ export default function BookingsClient({ initialBookings }: { initialBookings: B
             preferredDate: editTarget.preferredDate,
             guestCount: editTarget.guestCount,
             specialRequests: editTarget.specialRequests,
-            venueName: editTarget.venue.name,
+            venueName: editTarget.venue?.name ?? "—",
           }}
           onClose={() => setEditTarget(null)}
           onSaved={handleSaved}
